@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=ko_KR.UTF-8"
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       # 로컬 PostgreSQL 데이터를 마운트 (기존 데이터 유지)
       - postgres_data:/var/lib/postgresql/data
@@ -21,13 +21,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network  
 
   # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: interview-redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -36,6 +36,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   # HighLog Spring Boot Backend
   highlog-backend:
@@ -59,12 +61,12 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
-      cloud.aws.region.static: ${AWS_REGION:-ap-northeast-2}
+      cloud.aws.region.static: ${AWS_REGION}
 
       # JWT
       JWT_SECRET: ${JWT_SECRET}
-      JWT_ACCESS_TOKEN_EXPIRATIONS: ${JWT_ACCESS_TOKEN_EXPIRATIONS:-86400000}
-      JWT_REFRESH_TOKEN_EXPIRATIONS: ${JWT_REFRESH_TOKEN_EXPIRATIONS:-1209600000}
+      JWT_ACCESS_TOKEN_EXPIRATIONS: ${JWT_ACCESS_TOKEN_EXPIRATIONS}
+      JWT_REFRESH_TOKEN_EXPIRATIONS: ${JWT_REFRESH_TOKEN_EXPIRATIONS}
 
       # Email
       MAIL_USERNAME: ${MAIL_USERNAME}
@@ -93,15 +95,15 @@ services:
       dockerfile: Dockerfile
     container_name: interview-ai-service
     ports:
-      - "${FASTAPI_SERVER_PORT:-8000}:8000"
+      - "${FASTAPI_SERVER_PORT}:8000"
     environment:
       # Database (PostgreSQL + pgvector for LangGraph checkpoints)
-      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-ksm9203}:${POSTGRES_PASSWORD:-ksm1234}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-highlog}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
 
       # AWS S3
       aws_access_key_id: ${AWS_ACCESS_KEY_ID}
       aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY}
-      aws_region: ${AWS_REGION:-ap-northeast-2}
+      aws_region: ${AWS_REGION}
       aws_s3_bucket: ${AWS_S3_BUCKET_NAME}
 
       # Google AI
@@ -109,24 +111,21 @@ services:
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       google_application_credentials: ${GOOGLE_APPLICATION_CREDENTIALS}
 
-      # LangChain
-      langchain_tracing_v2: ${LANGCHAIN_TRACING_V2:-false}
-      langchain_api_key: ${LANGCHAIN_API_KEY}
-      langchain_project: ${LANGCHAIN_PROJECT}
-      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
+      # LangSmith (옵셔너리 트레이싱/디버깅 - 선택사항)
+      LANGCHAIN_TRACING_V2: "false"
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
       LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT}
 
       # JWT
       jwt_secret: ${JWT_SECRET}
-      jwt_algorithm: ${JWT_ALGORITHM:-HS256}
-      jwt_access_token_expire_minutes: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      jwt_algorithm: ${JWT_ALGORITHM}
+      jwt_access_token_expire_minutes: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES}
 
       # CORS
-      cors_origins: ${CORS_ORIGINS:-["http://localhost:3000","http://localhost:8080","http://localhost:8000"]}
+      cors_origins: ${CORS_ORIGINS}
 
       # Debug
-      DEBUG: ${DEBUG:-true}
+      DEBUG: ${DEBUG}
       app_name: HighLog AI Service
     depends_on:
       postgres:
