@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: interview-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=ko_KR.UTF-8"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # 로컬 PostgreSQL 데이터를 마운트 (기존 데이터 유지)
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: interview-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # HighLog Spring Boot Backend
+  highlog-backend:
+    build:
+      context: ./highLog
+      dockerfile: Dockerfile
+    container_name: interview-backend
+    ports:
+      - "${SPRING_SERVER_PORT}:8080
+    environment:
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # Redis
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_SERVER_PORT: ${REDIS_PORT}
+
+      # AWS S3
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME}
+      cloud.aws.region.static: ${AWS_REGION:-ap-northeast-2}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATIONS: ${JWT_ACCESS_TOKEN_EXPIRATIONS:-86400000}
+      JWT_REFRESH_TOKEN_EXPIRATIONS: ${JWT_REFRESH_TOKEN_EXPIRATIONS:-1209600000}
+
+      # Email
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      # Admin
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+
+      # Spring
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # AI Service (FastAPI + LangGraph)
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: interview-ai-service
+    ports:
+      - "${FASTAPI_SERVER_PORT:-8000}:8000"
+    environment:
+      # Database (PostgreSQL + pgvector for LangGraph checkpoints)
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-ksm9203}:${POSTGRES_PASSWORD:-ksm1234}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-highlog}
+
+      # AWS S3
+      aws_access_key_id: ${AWS_ACCESS_KEY_ID}
+      aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+      aws_region: ${AWS_REGION:-ap-northeast-2}
+      aws_s3_bucket: ${AWS_S3_BUCKET_NAME}
+
+      # Google AI
+      google_api_key: ${GOOGLE_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      google_application_credentials: ${GOOGLE_APPLICATION_CREDENTIALS}
+
+      # LangChain
+      langchain_tracing_v2: ${LANGCHAIN_TRACING_V2:-false}
+      langchain_api_key: ${LANGCHAIN_API_KEY}
+      langchain_project: ${LANGCHAIN_PROJECT}
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT}
+
+      # JWT
+      jwt_secret: ${JWT_SECRET}
+      jwt_algorithm: ${JWT_ALGORITHM:-HS256}
+      jwt_access_token_expire_minutes: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+
+      # CORS
+      cors_origins: ${CORS_ORIGINS:-["http://localhost:3000","http://localhost:8080","http://localhost:8000"]}
+
+      # Debug
+      DEBUG: ${DEBUG:-true}
+      app_name: HighLog AI Service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+    driver: local
+    name: postgres_data
+  redis_data:
+    driver: local
+    name: redis_data
+
+networks:
+  app-network:
+    driver: bridge
+    name: app-network

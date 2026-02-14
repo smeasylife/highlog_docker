@@ -1,0 +1,75 @@
+# Environment variables (보안상 Git 제외)
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+.gradle/
+build/
+gradlew
+gradlew.bat
+gradle/
+.target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+logs/
+
+# Docker volumes
+# (이미 docker-compose.yml에서 name으로 지정됨)
+
+# Docker override files
+docker-compose.override.yml
+
+# Node modules (프론트엔드)
+node_modules/
+dist/
+*.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Serena (AI 코딩 도구)
+.serena/
+
+# 프로젝트 소스 (Docker 빌드 사용)
+ai-service/
+highLog/
+
+# 기존 Docker 컨테이너 (새로운 docker-compose 사용)
+my-postgres
+redis
