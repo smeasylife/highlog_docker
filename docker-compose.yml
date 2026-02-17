@@ -1,6 +1,28 @@
 version: '3.8'
 
 services:
+  # Nginx Reverse Proxy (HTTPS termination)
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: interview-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # SSL certificates mount (Let's Encrypt)
+      # 인증서 파일이 존재하지 않으면 플레이스홀더가 사용됩니다
+      - ./certificates/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro
+      - ./certificates/privkey.pem:/etc/nginx/certs/privkey.pem:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - highlog-backend
+      - ai-service
+    restart: unless-stopped
+    networks:
+      - app-network
+
   # PostgreSQL Database with pgvector extension
   postgres:
     image: pgvector/pgvector:pg16
@@ -45,8 +67,9 @@ services:
       context: ./highLog
       dockerfile: Dockerfile
     container_name: interview-backend
-    ports:
-      - "${SPRING_SERVER_PORT}:8080"
+    # No external port exposure - only accessible via nginx
+    expose:
+      - "8080"
     environment:
       # Database
       SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
@@ -95,8 +118,9 @@ services:
       context: ./ai-service
       dockerfile: Dockerfile
     container_name: interview-ai-service
-    ports:
-      - "${FASTAPI_SERVER_PORT}:8000"
+    # No external port exposure - only accessible via nginx
+    expose:
+      - "8000"
     environment:
       # Database (PostgreSQL + pgvector for LangGraph checkpoints)
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
@@ -143,6 +167,9 @@ volumes:
   redis_data:
     driver: local
     name: redis_data
+  nginx_logs:
+    driver: local
+    name: nginx_logs
 
 networks:
   app-network:

@@ -66,6 +66,12 @@ dist/
 # Serena (AI 코딩 도구)
 .serena/
 
+# SSL Certificates (보안 - 개인 키는 Git에 커밋하지 않음)
+certificates/privkey.pem
+certificates/*.key
+certificates/*.pem
+!certificates/README.md
+
 # 프로젝트 소스 (Docker 빌드 사용)
 ai-service/
 highLog/
