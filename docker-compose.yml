@@ -8,7 +8,6 @@ services:
       dockerfile: Dockerfile
     container_name: interview-nginx
     ports:
-      - "80:80"
       - "443:443"
     volumes:
       # SSL certificates mount (Let's Encrypt)
