@@ -102,6 +102,13 @@ services:
       # Spring
       SPRING_PROFILES_ACTIVE: prod
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
+
+      # CORS
+      cors.allow.origins: ${cors.allow.origins}
+      cors.allow.credentials: ${cors.allow.credentials}
+      cors.allow.headers: ${cors.allow.headers}
+      cors.expose.headers: ${cors.expose.headers}
+      cors.allow.methods: ${cors.allow.methods}
     depends_on:
       postgres:
         condition: service_healthy
