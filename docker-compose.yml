@@ -104,11 +104,11 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
 
       # CORS
-      cors.allow.origins: ${cors.allow.origins}
-      cors.allow.credentials: ${cors.allow.credentials}
-      cors.allow.headers: ${cors.allow.headers}
-      cors.expose.headers: ${cors.expose.headers}
-      cors.allow.methods: ${cors.allow.methods}
+      cors_allow_origins: ${CORS_ALLOW_ORIGINS}
+      cors_allow_credentials: ${CORS_ALLOW_CREDENTIALS}
+      cors_allow_headers: ${CORS_ALLOW_HEADERS}
+      cors_expose_headers: ${CORS_EXPOSE_HEADERS}
+      cors_allow_methods: ${CORS_ALLOW_METHODS}
     depends_on:
       postgres:
         condition: service_healthy
