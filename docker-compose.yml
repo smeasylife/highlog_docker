@@ -127,6 +127,8 @@ services:
     # No external port exposure - only accessible via nginx
     expose:
       - "8000"
+    volumes:
+      - ./ai-service/google-credentials.json:/app/google-credentials.json:ro
     environment:
       # Database (PostgreSQL + pgvector for LangGraph checkpoints)
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
