@@ -143,7 +143,7 @@ services:
       # Google AI
       google_api_key: ${GOOGLE_API_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
-      google_application_credentials: ${GOOGLE_APPLICATION_CREDENTIALS}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
 
       # LangSmith (옵셔너리 트레이싱/디버깅 - 선택사항)
       LANGCHAIN_TRACING_V2: "false"
