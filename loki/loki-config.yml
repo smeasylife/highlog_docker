@@ -28,3 +28,4 @@ schema_config:
 
 limits_config:
   retention_period: 7d      # 스테이징이니 7일치만 보관
+  allow_structured_metadata: false
