@@ -74,6 +74,15 @@ AWS_S3_BUCKET_NAME=highlog-records
 GOOGLE_API_KEY=your_google_api_key
 ```
 
+### Azure Speech (TTS / Viseme)
+
+```bash
+AZURE_SPEECH_KEY=your_azure_speech_key
+AZURE_SPEECH_REGION=koreacentral
+AZURE_SPEECH_VOICE_NAME=ko-KR-InJoonNeural
+AZURE_SPEECH_LANGUAGE=ko-KR
+```
+
 ### JWT
 
 ```bash
